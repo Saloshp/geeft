@@ -1,0 +1,27 @@
+---
+timer_interval: 10
+
+# much safer, with rly bad effect on performance
+use_temp_index: True
+
+spool_dir: "/var/spool/geeft"
+
+# remove, rename, none
+spool_completed_action: "remove"
+spool_completed_suffix: ".COMPLETED"
+
+elastic_hosts:
+  - 192.168.1.9
+
+#  - 192.168.1.10
+
+parsing:
+  "pacman":
+    "regex": "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}"
+    "date_format": "%Y-%m-%d %H:%M"
+  "elasticsearch":
+    "regex": "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2},\\d{3}"
+    "date_format": "%Y-%m-%dT%H:%M:%S,%f"
+  "ansible":
+    "regex": "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}"
+    "date_format": "%Y-%m-%d %H:%M:%S,%f"
