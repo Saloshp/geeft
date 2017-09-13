@@ -39,7 +39,7 @@ class FileIndexer():
     self.es = es
 
   def index_spool_dir(self):
-    logger.info("Parsing spool dir: %s" % self.spool_dir)
+    logger.debug("Parsing spool dir: %s" % self.spool_dir)
     oswalk = os.walk(self.spool_dir)
     for dirname, dirs, files in oswalk:
       for file in files:
@@ -62,7 +62,9 @@ class FileIndexer():
         task.spool_completed_suffix = self.spool_completed_suffix
 
         self.taskQueue.put(task)
-    logger.info("Indexing {} files".format(self.taskQueue.qsize()))
+
+    if self.taskQueue.qsize() > 0:
+        logger.info("Indexing {} files".format(self.taskQueue.qsize()))
 
     num_forks = min(self.forks, self.taskQueue.qsize())
     if num_forks < 1:

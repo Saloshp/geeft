@@ -11,9 +11,7 @@ spool_completed_action: "remove"
 spool_completed_suffix: ".COMPLETED"
 
 elastic_hosts:
-  - 192.168.1.9
-
-#  - 192.168.1.10
+  - 127.0.0.1
 
 parsing:
   "pacman":

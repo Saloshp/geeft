@@ -1,0 +1,16 @@
+[Unit]
+Description="GEEFT service"
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/geeft
+ExecStart=/opt/geeft/geeft.py --iteration 0
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+
