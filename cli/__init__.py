@@ -8,11 +8,14 @@ VERSION = (1, 0, 0, 0)
 __version__ = VERSION
 __versionstr__ = '.'.join(map(str, VERSION))
 
+import subprocess
 from .utils import *
 
 args = parse_cli_args()
 logger = init_logging()
 cfg = init_config(args)
+hwuuid_proc = subprocess.Popen('dmidecode -s system-uuid'.split(),stdout=subprocess.PIPE)
+hwuuid = hwuuid_proc.stdout.readline().rstrip().decode("utf-8").lower()
 
 if cfg.debug:
   logger.setLevel(logging.DEBUG)
@@ -26,8 +29,8 @@ def signal_handler(signal, frame):
     sys.exit(0)
   else:
     es.indices.refresh()
-    logger.info("Logging stats: {}".format(es.count(index='logs-*')))
+    logger.info("Logging stats: {}".format(es.count(index='logs_*')))
 
 ###
-logger.info("Initiated...")
+logger.info("Initiated %s ..." % hwuuid)
 

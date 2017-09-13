@@ -10,10 +10,9 @@ from cli import *
 from cli.file_indexer import FileIndexer
 
 def main():
-
   while cfg.iterations > 0 or cfg.unlimited_iterations:
     cfg.iterations -= 1
-    fileIndexer = FileIndexer(es, cfg)
+    fileIndexer = FileIndexer(es, cfg, hwuuid)
     fileIndexer.index_spool_dir()
 
     res = es.indices.delete('temp*')

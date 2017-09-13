@@ -22,7 +22,7 @@ class FileIndexTask(dict):
 
 class FileIndexer():
 
-  def __init__(self, es, cfg):
+  def __init__(self, es, cfg, hwuuid):
     self.queueLock = threading.Lock()
     self.taskQueue = queue.Queue()
     self.forks = cfg.forks
@@ -33,10 +33,11 @@ class FileIndexer():
     self.parsing = cfg.parsing
 
     today = datetime.now().strftime('%Y.%m.%d')
-    self.index_name = 'logs-' + today
+    self.index_name = 'logs_' + today + '_' + hwuuid
     self.use_temp_index = cfg.use_temp_index
 
     self.es = es
+    self.hwuuid = hwuuid
 
   def index_spool_dir(self):
     logger.debug("Parsing spool dir: %s" % self.spool_dir)
@@ -73,7 +74,7 @@ class FileIndexer():
     logger.debug("Starting {} worker threads".format( num_forks ))
     threads = []
     for i in range( num_forks ):
-      thread = FileIndexThread(self.es, self.taskQueue, self.queueLock)
+      thread = FileIndexThread(self.es, self.taskQueue, self.queueLock, self.hwuuid)
       thread.start()
       threads.append(thread)
 
@@ -86,11 +87,12 @@ class FileIndexer():
 
 class FileIndexThread(threading.Thread):
 
-  def __init__(self, es, taskQueue, queueLock):
+  def __init__(self, es, taskQueue, queueLock, hwuuid):
     threading.Thread.__init__(self)
     self.es = es
     self.taskQueue = taskQueue
     self.queueLock = queueLock
+    self.hwuuid = hwuuid
 
   def run(self):
     logger.debug("Starting thread '{}'".format(self.name))
@@ -134,6 +136,26 @@ class FileIndexThread(threading.Thread):
 #          print(e)
           pass
   #        raise
+      extracted_ips = set()
+      try:
+        for ip in re.findall(r'((\d{1,3}\.){3}(\d{1,3}))(:[0-9]{5})?', line):
+            extracted_ips.add(ip[0])
+      except AttributeError as e:
+        pass
+
+      extracted_uuids = set()
+      try:
+        for uuid in re.findall(r'[0-9a-fA-F-]{36}', line):
+            extracted_uuids.add(uuid)
+      except AttributeError as e:
+        pass
+
+      extracted_paths = set()
+      try:
+        for path in re.findall(r'(/([a-zA-Z0-9-._]+)(/[a-zA-Z0-9-._]+)+)', line):
+            extracted_paths.add(path[0])
+      except AttributeError as e:
+        pass
 
       action = {
         "_type": "logs",
@@ -144,7 +166,11 @@ class FileIndexThread(threading.Thread):
           "host": os.uname()[1],
           "tags": [service],
           "kvtag": {
-            "host": os.uname()[1],
+            "paths": list(extracted_paths),
+            "uuids": list(extracted_uuids),
+            "ips": list(extracted_ips),
+            "hostuuid": self.hwuuid,
+            "hostname": os.uname()[1],
             "service": service
           }
         }
