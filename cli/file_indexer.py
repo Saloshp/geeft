@@ -10,7 +10,6 @@ import time
 from datetime import datetime
 import os
 import re
-from datetime import datetime
 from elasticsearch import Elasticsearch
 from elasticsearch import helpers
 import uuid
@@ -50,6 +49,7 @@ class FileIndexer():
         task.ts = [datetime.now()]
         task.filename = file
         task.logname = file.split('__')[0]
+        task.rotatetime = int(file.split('__')[1].split('_')[3])
         task.service = '{}'.format(dirname.replace(self.spool_dir + '/', ''))
         task.parsing = None
         if task.service in self.parsing:
@@ -119,13 +119,15 @@ class FileIndexThread(threading.Thread):
 
     logger.debug("Exiting thread '{}'".format(self.name))
 
-  def _generate_bulk_elastic_actions_from_file(self, file_path, service, logname, parsing):
+  def _generate_bulk_elastic_actions_from_file(self, rotatetime, file_path, service, logname, parsing):
     logger.debug("Generating bulk actions from file '{}'".format(file_path))
     date = datetime.now()
     last_date = datetime.now()
   #  actions = []
-    file = open(file_path,'r')
+    file = open(file_path, 'r', encoding='utf8')
+    file_index = 0
     for line in file.readlines():
+      file_index += 1
   #    if line == '' or line == '\n':
   #      continue
       if parsing is not None:
@@ -167,10 +169,12 @@ class FileIndexThread(threading.Thread):
         "_type": "logs",
         "_source": {
           "data": line,
+          "@rotated": datetime.utcfromtimestamp(rotatetime).replace(microsecond=1),
           "@created": last_date,
           "@indexed": datetime.now(),
           "host": os.uname()[1],
           "tags": [service, logname],
+          "linenum": file_index,
           "kvtag": {
             "paths": list(extracted_paths),
             "uuids": list(extracted_uuids),
@@ -197,7 +201,7 @@ class FileIndexThread(threading.Thread):
     logger.debug("Indexing file '{}' to '{}'".format(task.file_path, index))
     file = open(task.file_path, 'r')
     try:
-      for success, info in helpers.parallel_bulk(self.es, self._generate_bulk_elastic_actions_from_file(task.file_path, task.service, task.logname, task.parsing), thread_count=2, index=index):
+      for success, info in helpers.parallel_bulk(self.es, self._generate_bulk_elastic_actions_from_file(task.rotatetime, task.file_path, task.service, task.logname, task.parsing), thread_count=2, index=index):
         if not success:
           logger.error('Failed: {}'.format(info[0]))
           return False
