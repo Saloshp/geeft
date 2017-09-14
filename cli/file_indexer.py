@@ -49,10 +49,13 @@ class FileIndexer():
         task = FileIndexTask()
         task.ts = [datetime.now()]
         task.filename = file
-        task.service = file.split('.')[0]
+        task.logname = file.split('__')[0]
+        task.service = '{}'.format(dirname.replace(self.spool_dir + '/', ''))
         task.parsing = None
         if task.service in self.parsing:
           task.parsing = self.parsing[task.service]
+        elif task.service + '_' + task.logname in self.parsing:
+          task.parsing = self.parsing[task.service + '_' + task.logname]
         task.dirname = dirname
         task.file_path = os.path.join(dirname, file)
         task.index_name = self.index_name
@@ -116,7 +119,7 @@ class FileIndexThread(threading.Thread):
 
     logger.debug("Exiting thread '{}'".format(self.name))
 
-  def _generate_bulk_elastic_actions_from_file(self, file_path, service, parsing):
+  def _generate_bulk_elastic_actions_from_file(self, file_path, service, logname, parsing):
     logger.debug("Generating bulk actions from file '{}'".format(file_path))
     date = datetime.now()
     last_date = datetime.now()
@@ -128,14 +131,17 @@ class FileIndexThread(threading.Thread):
       if parsing is not None:
         regex = parsing['regex']
         date_format = parsing['date_format']
+#        logger.debug('Date format: {}'.format(date_format))
         try:
+#          logger.debug('Regex: {}'.format(regex))
           extracted_date = re.search(regex, line).group(0)
           date = datetime.strptime(extracted_date, date_format)
           last_date = date
         except AttributeError as e:
-#          print(e)
+#          logger.error(e)
           pass
-  #        raise
+#          raise
+
       extracted_ips = set()
       try:
         for ip in re.findall(r'((\d{1,3}\.){3}(\d{1,3}))(:[0-9]{5})?', line):
@@ -164,7 +170,7 @@ class FileIndexThread(threading.Thread):
           "@created": last_date,
           "@indexed": datetime.now(),
           "host": os.uname()[1],
-          "tags": [service],
+          "tags": [service, logname],
           "kvtag": {
             "paths": list(extracted_paths),
             "uuids": list(extracted_uuids),
@@ -191,7 +197,7 @@ class FileIndexThread(threading.Thread):
     logger.debug("Indexing file '{}' to '{}'".format(task.file_path, index))
     file = open(task.file_path, 'r')
     try:
-      for success, info in helpers.parallel_bulk(self.es, self._generate_bulk_elastic_actions_from_file(task.file_path, task.service, task.parsing), thread_count=2, index=index):
+      for success, info in helpers.parallel_bulk(self.es, self._generate_bulk_elastic_actions_from_file(task.file_path, task.service, task.logname, task.parsing), thread_count=2, index=index):
         if not success:
           logger.error('Failed: {}'.format(info[0]))
           return False
