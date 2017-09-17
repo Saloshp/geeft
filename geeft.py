@@ -12,7 +12,7 @@ from cli.file_indexer import FileIndexer
 def main():
   while cfg.iterations > 0 or cfg.unlimited_iterations:
     cfg.iterations -= 1
-    fileIndexer = FileIndexer(es, cfg, hwuuid)
+    fileIndexer = FileIndexer(es, cfg, hostplatform)
     fileIndexer.index_spool_dir()
 
     res = es.indices.delete('temp*')

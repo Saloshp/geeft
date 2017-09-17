@@ -21,7 +21,7 @@ class FileIndexTask(dict):
 
 class FileIndexer():
 
-  def __init__(self, es, cfg, hwuuid):
+  def __init__(self, es, cfg, hostplatform):
     self.queueLock = threading.Lock()
     self.taskQueue = queue.Queue()
     self.forks = cfg.forks
@@ -32,11 +32,11 @@ class FileIndexer():
     self.parsing = cfg.parsing
 
     today = datetime.now().strftime('%Y.%m.%d')
-    self.index_name = 'logs_' + today + '_' + hwuuid
+    self.index_name = 'logs_{}_{}'.format(today, hostplatform['hwuuid'])
     self.use_temp_index = cfg.use_temp_index
 
     self.es = es
-    self.hwuuid = hwuuid
+    self.hostplatform = hostplatform
 
   def index_spool_dir(self):
     logger.debug("Parsing spool dir: %s" % self.spool_dir)
@@ -77,7 +77,7 @@ class FileIndexer():
     logger.debug("Starting {} worker threads".format( num_forks ))
     threads = []
     for i in range( num_forks ):
-      thread = FileIndexThread(self.es, self.taskQueue, self.queueLock, self.hwuuid)
+      thread = FileIndexThread(self.es, self.taskQueue, self.queueLock, self.hostplatform)
       thread.start()
       threads.append(thread)
 
@@ -90,12 +90,12 @@ class FileIndexer():
 
 class FileIndexThread(threading.Thread):
 
-  def __init__(self, es, taskQueue, queueLock, hwuuid):
+  def __init__(self, es, taskQueue, queueLock, hostplatform):
     threading.Thread.__init__(self)
     self.es = es
     self.taskQueue = taskQueue
     self.queueLock = queueLock
-    self.hwuuid = hwuuid
+    self.hostplatform = hostplatform
 
   def run(self):
     logger.debug("Starting thread '{}'".format(self.name))
@@ -179,7 +179,8 @@ class FileIndexThread(threading.Thread):
             "paths": list(extracted_paths),
             "uuids": list(extracted_uuids),
             "ips": list(extracted_ips),
-            "hostuuid": self.hwuuid,
+            "hostuuid": self.hostplatform['hwuuid'],
+            "hostdistro": self.hostplatform['uname'].release,
             "hostname": os.uname()[1],
             "service": service
           }
