@@ -146,10 +146,19 @@ class FileIndexThread(threading.Thread):
           pass
 #          raise
 
+      kvtag = {
+        "hostuuid": self.hostplatform['hwuuid'],
+        "hostplatform": self.hostplatform['platform'],
+        "hostname": os.uname()[1],
+        "service": service
+      }
+
       extracted_ips = set()
       try:
         for ip in re.findall(r'((\d{1,3}\.){3}(\d{1,3}))(:[0-9]{5})?', line):
             extracted_ips.add(ip[0])
+        if len(extracted_ips) > 0:
+            kvtag['ips'] = list(extracted_ips)
       except AttributeError as e:
         pass
 
@@ -157,6 +166,8 @@ class FileIndexThread(threading.Thread):
       try:
         for uuid in re.findall(r'[0-9a-fA-F-]{36}', line):
             extracted_uuids.add(uuid)
+        if len(extracted_uuids) > 0:
+            kvtag['uuids'] = list(extracted_uuids)
       except AttributeError as e:
         pass
 
@@ -164,6 +175,17 @@ class FileIndexThread(threading.Thread):
       try:
         for path in re.findall(r'(((http)(s)?:/)?(/([a-zA-Z0-9-._]+)(/[a-zA-Z0-9-._]+)+))', line):
             extracted_paths.add(path[0])
+        if len(extracted_paths) > 0:
+            kvtag['paths'] = list(extracted_paths)
+      except AttributeError as e:
+        pass
+
+      extracted_java_exceptions = set()
+      try:
+        for exception in re.findall(r'((Caused by: (.*Exception)).*)', line):
+            extracted_java_exceptions.add(exception[2])
+        if len(extracted_java_exceptions) > 0:
+            kvtag['exception'] = extracted_java_exceptions
       except AttributeError as e:
         pass
 
@@ -177,17 +199,10 @@ class FileIndexThread(threading.Thread):
           "host": os.uname()[1],
           "tags": [service, logname],
           "linenum": file_index,
-          "kvtag": {
-            "paths": list(extracted_paths),
-            "uuids": list(extracted_uuids),
-            "ips": list(extracted_ips),
-            "hostuuid": self.hostplatform['hwuuid'],
-            "hostplatform": self.hostplatform['platform'],
-            "hostname": os.uname()[1],
-            "service": service
-          }
+          "kvtag": kvtag
         }
       }
+
 #      print(action)
       yield action
   #    actions.append(action)
