@@ -182,10 +182,10 @@ class FileIndexThread(threading.Thread):
 
       extracted_java_exceptions = set()
       try:
-        for exception in re.findall(r'((Caused by: (.*Exception)).*)', line):
-            extracted_java_exceptions.add(exception[2])
+        for exception in re.findall(r'(.*Exception).*', line):
+            extracted_java_exceptions.add(exception[0])
         if len(extracted_java_exceptions) > 0:
-            kvtag['exception'] = str(extracted_java_exceptions)
+            kvtag['exception'] = list(extracted_java_exceptions)
       except AttributeError as e:
         pass
 
