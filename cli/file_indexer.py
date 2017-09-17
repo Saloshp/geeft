@@ -162,7 +162,7 @@ class FileIndexThread(threading.Thread):
 
       extracted_paths = set()
       try:
-        for path in re.findall(r'(/([a-zA-Z0-9-._]+)(/[a-zA-Z0-9-._]+)+)', line):
+        for path in re.findall(r'(((http)(s)?:/)?(/([a-zA-Z0-9-._]+)(/[a-zA-Z0-9-._]+)+))', line):
             extracted_paths.add(path[0])
       except AttributeError as e:
         pass
