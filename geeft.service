@@ -10,6 +10,7 @@ WorkingDirectory=/opt/geeft
 ExecStart=/opt/geeft/geeft.py --iteration 0
 StandardOutput=journal
 StandardError=journal
+SyslogIdentifier=geeft
 
 [Install]
 WantedBy=multi-user.target

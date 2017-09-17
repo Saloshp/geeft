@@ -189,6 +189,15 @@ class FileIndexThread(threading.Thread):
       except AttributeError as e:
         pass
 
+      extracted_levels = set()
+      try:
+        for level in re.findall(r'trace|debug|notice|info|warning|warn|fatal|exception|error', line, re.IGNORECASE):
+            extracted_levels.add(level)
+        if len(extracted_levels) > 0:
+            kvtag['level'] = list(extracted_levels)
+      except AttributeError as e:
+        pass
+
       action = {
         "_type": "logs",
         "_source": {

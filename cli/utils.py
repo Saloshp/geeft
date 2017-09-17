@@ -16,7 +16,7 @@ class YamlConfiguration(dict):
 
 def init_logging():
   ''' Initialize logging configuration '''
-  logging.basicConfig(format='%(asctime)-15s %(levelname).5s %(process)d [%(module)s] [%(funcName)s:%(lineno)d] - %(message)s')
+  logging.basicConfig(filename='/var/log/geeft.log', format='%(asctime)-15s %(levelname).5s %(process)d [%(module)s] [%(funcName)s:%(lineno)d] - %(message)s')
 
   logger = logging.getLogger('geeft')
   logger.setLevel(logging.INFO)
