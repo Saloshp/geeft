@@ -185,13 +185,13 @@ class FileIndexThread(threading.Thread):
         for exception in re.findall(r'((Caused by: (.*Exception)).*)', line):
             extracted_java_exceptions.add(exception[2])
         if len(extracted_java_exceptions) > 0:
-            kvtag['exception'] = extracted_java_exceptions
+            kvtag['exception'] = str(extracted_java_exceptions)
       except AttributeError as e:
         pass
 
       extracted_levels = set()
       try:
-        for level in re.findall(r'trace|debug|notice|info|warning|warn|fatal|exception|error', line, re.IGNORECASE):
+        for level in re.findall(r'trace|debug|notice|info|warning|warn|fatal|exception|severe|error', line, re.IGNORECASE):
             extracted_levels.add(level)
         if len(extracted_levels) > 0:
             kvtag['level'] = list(extracted_levels)
