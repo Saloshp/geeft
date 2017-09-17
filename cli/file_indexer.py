@@ -121,8 +121,9 @@ class FileIndexThread(threading.Thread):
 
   def _generate_bulk_elastic_actions_from_file(self, rotatetime, file_path, service, logname, parsing):
     logger.debug("Generating bulk actions from file '{}'".format(file_path))
-    date = datetime.now()
-    last_date = datetime.now()
+    now = datetime.now()
+    date = now
+    last_date = now
   #  actions = []
     file = open(file_path, 'r', encoding='utf8')
     file_index = 0
@@ -138,6 +139,7 @@ class FileIndexThread(threading.Thread):
 #          logger.debug('Regex: {}'.format(regex))
           extracted_date = re.search(regex, line).group(0)
           date = datetime.strptime(extracted_date, date_format)
+          date = date.replace(year=now.year)
           last_date = date
         except AttributeError as e:
 #          logger.error(e)
@@ -180,7 +182,7 @@ class FileIndexThread(threading.Thread):
             "uuids": list(extracted_uuids),
             "ips": list(extracted_ips),
             "hostuuid": self.hostplatform['hwuuid'],
-            "hostdistro": self.hostplatform['uname'].release,
+            "hostplatform": self.hostplatform['platform'],
             "hostname": os.uname()[1],
             "service": service
           }

@@ -29,5 +29,10 @@ parsing:
   "httpd_access_log":
     "regex": "\\d{2}/[A-Z]{1}[a-z]{2}/\\d{4}:\\d{2}:\\d{2}:\\d{2} \\+\\d{4}"
     "date_format": "%d/%b/%Y:%H:%M:%S %z"
-
+  "syslog":
+    "regex": "[A-Z]{1}[a-z]{2} \\d{2} \\d{2}:\\d{2}:\\d{2}"
+    "date_format": "%b %d %H:%M:%S"
+  "system_auth.log":
+    "regex": "[A-Z]{1}[a-z]{2} \\d{2} \\d{2}:\\d{2}:\\d{2}"
+    "date_format": "%b %d %H:%M:%S"
 
