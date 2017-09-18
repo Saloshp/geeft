@@ -191,7 +191,7 @@ class FileIndexThread(threading.Thread):
 
       extracted_levels = set()
       try:
-        for level in re.findall(r'trace|debug|notice|info|warning|warn|fatal|exception|severe|error', line, re.IGNORECASE):
+        for level in re.findall(r'trace|debug|notice|info|warning|warn|fatal|failure|fail|exception|severe|error', line, re.IGNORECASE):
             extracted_levels.add(level)
         if len(extracted_levels) > 0:
             kvtag['level'] = list(extracted_levels)
