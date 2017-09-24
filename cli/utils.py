@@ -36,7 +36,8 @@ def parse_cli_args():
     help='Specify number of worker threads (default: number of cores)')
   parser.add_argument('--iterations', action='store', type=int, dest='iterations', default=1,
     help='Specify number of iterations, 0 for unlimited (default: 1)')
-  parser.add_argument('--interval', action='store', type=int, dest='interval', default=30,
+# TODO default=30
+  parser.add_argument('--interval', action='store', type=int, dest='timer_interval',
     help='Set timer interval in seconds (default: 30 seconds)')
   args = parser.parse_args()
 
@@ -55,9 +56,11 @@ def init_config(args):
 #  query_json = json.load(query_file)
 
   for key in ymlcfg.keys():
-    setattr(cfg, key, ymlcfg[key])
+    if ymlcfg[key] is not None:
+      setattr(cfg, key, ymlcfg[key])
   for key in vars(args).keys():
-    setattr(cfg, key, vars(args)[key])
+    if vars(args)[key] is not None:
+      setattr(cfg, key, vars(args)[key])
 
   if args.iterations == 0:
     cfg.unlimited_iterations = True

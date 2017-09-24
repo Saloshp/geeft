@@ -16,11 +16,13 @@ from .utils import *
 args = parse_cli_args()
 logger = init_logging()
 cfg = init_config(args)
+
 hwuuid_proc = subprocess.Popen('dmidecode -s system-uuid'.split(),stdout=subprocess.PIPE)
 hwuuid = hwuuid_proc.stdout.readline().rstrip().decode("utf-8").lower()
 
 if cfg.debug:
   logger.setLevel(logging.DEBUG)
+  logger.debug("Configuration - '{}'".format(cfg.__dict__))
 
 hostplatform = dict()
 hostplatform['sysversion'] = sys.version.split('\n')
@@ -38,7 +40,7 @@ es = init_elastic(cfg)
 
 def signal_handler(signal, frame):
   logger.debug("Caught signal '{}'".format(signal))
-  if signal == 2:
+  if signal == 2 or signal == 15:
     logger.debug("Aborting execution")
     sys.exit(0)
   else:
@@ -46,5 +48,5 @@ def signal_handler(signal, frame):
     logger.info("Logging stats: {}".format(es.count(index='logs_*')))
 
 ###
-logger.info("Initiated %s" % hostplatform)
+logger.info("Initiated - %s" % hostplatform)
 

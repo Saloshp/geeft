@@ -38,7 +38,7 @@ class FileIndexer():
     self.es = es
     self.hostplatform = hostplatform
 
-  def index_spool_dir(self):
+  def index(self):
     logger.debug("Parsing spool dir: %s" % self.spool_dir)
     oswalk = os.walk(self.spool_dir)
     for dirname, dirs, files in oswalk:
@@ -142,7 +142,7 @@ class FileIndexThread(threading.Thread):
           date = date.replace(year=now.year)
           last_date = date
         except AttributeError as e:
-#          logger.error(e)
+#          logger.exception(e)
           pass
 #          raise
 
@@ -212,7 +212,7 @@ class FileIndexThread(threading.Thread):
         }
       }
 
-#      print(action)
+#      logger.debug(action)
       yield action
   #    actions.append(action)
   #  return actions
@@ -241,6 +241,7 @@ class FileIndexThread(threading.Thread):
       task.count = count
 
       if task.use_temp_index:
+        msg = "Reindexing file '{}' data from '{}' to '{}' - using '{}'".format(task.file_path, task.temp_index_name, task.index_name, task.reindex_query)
         res = self.es.reindex(task.reindex_query, request_timeout=30)
         msg = "Reindexed file '{}' data from '{}' to '{}'".format(task.file_path, task.temp_index_name, task.index_name)
         logger.debug(msg)
@@ -259,7 +260,7 @@ class FileIndexThread(threading.Thread):
       logger.debug(msg)
 
     except Exception as e:
-      logger.error(e)
+      logger.exception(e)
       return False
 
     file.close()
