@@ -17,6 +17,7 @@ from pathlib import Path
 import json
 import select
 from systemd import journal
+from . import utils
 
 logger = logging.getLogger('geeft')
 
@@ -106,9 +107,16 @@ class JournalIndexThread(threading.Thread):
       "hostplatform": self.hostplatform['platform'],
       "hostname": str(entry['_HOSTNAME']),
       "service": service,
-      "level": str(entry['PRIORITY']),
+      "priority": str(entry['PRIORITY']),
       "boot_id": entry['_BOOT_ID']
     }
+
+    try:
+      extracted_kvtags = utils._extract_kvtags(str(entry['MESSAGE']))
+      kvtag.update(extracted_kvtags)
+    except Exception as e:
+      logger.exception(e)
+
     action = {
       "_type": "logs",
       "_source": {
